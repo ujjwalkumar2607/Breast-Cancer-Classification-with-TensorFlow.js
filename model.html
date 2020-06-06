@@ -1,0 +1,81 @@
+<html>
+<head></head>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script lang="js">
+        
+        async function run(){
+            const trainingUrl = 'wdbc-train.csv';
+            const trainingData = tf.data.csv(trainingUrl, {
+                columnConfigs: {
+                    diagnosis: {
+                        isLabel: true
+                    }
+                }
+            });
+            
+            const convertedTrainingData = trainingData.map(({xs, ys}) => {
+        
+                      return{ xs: Object.values(xs), ys: Object.values(ys)};
+                  }).batch(10);
+                  
+            const testingUrl = 'wdbc-test.csv';
+            
+          
+            const testingData = tf.data.csv(testingUrl, {
+                
+                
+       
+                columnConfigs: {
+                    diagnosis: {
+                        isLabel: true
+                    }
+                }
+            });
+            
+           
+            const convertedTestingData = testingData.map(({xs, ys}) => {
+        
+                      return{ xs: Object.values(xs), ys: Object.values(ys)};
+                  }).batch(10);
+                  
+
+            const numOfFeatures = (await trainingData.columnNames()).length - 1;
+            
+                
+            
+            const model = tf.sequential();
+            
+            model.add(tf.layers.dense({inputShape: [numOfFeatures], activation: "relu", units: 8}))
+            model.add(tf.layers.dense({activation: "relu", units: 16}))
+            model.add(tf.layers.dense({activation: "relu", units: 32}))
+            model.add(tf.layers.dense({activation: "sigmoid", units: 1}));
+
+            
+            
+    
+            model.compile({loss: "binaryCrossentropy", optimizer: tf.train.adam(0.06), metrics: ['accuracy']});
+            
+            
+            await model.fitDataset(convertedTrainingData, 
+                             {epochs:100,
+                              validationData: convertedTestingData,
+                              callbacks:{
+                                  onEpochEnd: async(epoch, logs) =>{
+                                      console.log("Epoch: " + epoch + " Loss: " + logs.loss + " Accuracy: " + logs.acc);
+                                  }
+                              }});
+           
+        }
+        run();
+    </script>
+<body>
+    <h1>Breast Cancer Classification using Neural networks.</h1>
+    <p>This model uses a total of 3 hidden layers and a single output layer.</p>
+    <p>The activation function used in the hidden units is ReLU whereas in the output layer we have a single Sigmoid activation function.</p>
+    <p>The model  utilises the Binary Crossentropy Loss function and is trained using the Adam Optimiser.</p>
+    <p>The network architecture was able to predict data on the validation set with upto 97% of accuracy.</p>
+    <p>To keep track of the epoch number, the corresponding loss and the runtime accuracy of the model, open console.<p> 
+    <p>If using Windows, press Control+Shift+J</p>
+    <p>If using Macintosh, press Command+Option+J</p>
+</body>
+</html>
